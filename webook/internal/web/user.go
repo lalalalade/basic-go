@@ -17,7 +17,7 @@ func NewUserHandler() *UserHandler {
 	const (
 		emailRegexPattern = "^\\w+(-+.\\w+)*@\\w+(-.\\w+)*.\\w+(-.\\w+)*$"
 		// 强密码(必须包含大小写字母和数字的组合，可以使用特殊字符，长度在8-10之间)：
-		passwordRegexPattern = "^(?=.*\\d)(?=.*a-z)(?=.*A-Z).{8,10}$"
+		passwordRegexPattern = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,10}$"
 	)
 	emailExp := regexp.MustCompile(emailRegexPattern, regexp.None)
 	passwordExp := regexp.MustCompile(passwordRegexPattern, regexp.None)
