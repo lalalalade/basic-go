@@ -28,3 +28,14 @@ func (r *UserRepository) FindById(int64) {
 	// 再从 dao 找
 	// 找到了回写cache
 }
+
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+	u, err := r.dao.FindByEmail(ctx, email)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return domain.User{
+		Email:    u.Email,
+		Password: u.Password,
+	}, nil
+}

@@ -92,6 +92,15 @@ func (u *UserHandler) SignUp(c *gin.Context) {
 }
 
 func (u *UserHandler) Login(c *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+	var req LoginReq
+	if err := c.Bind(&req); err != nil {
+		return
+	}
+	u.svc.Login(c, req.Email, req.Password)
 
 }
 
