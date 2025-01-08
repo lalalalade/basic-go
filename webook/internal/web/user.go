@@ -1,19 +1,21 @@
 package web
 
 import (
-	"fmt"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
+	"github.com/lalalalade/basic-go/webook/internal/domain"
+	"github.com/lalalalade/basic-go/webook/internal/service"
 	"net/http"
 )
 
 // UserHandler 定义用户相关路由
 type UserHandler struct {
+	svc         *service.UserService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
 }
 
-func NewUserHandler() *UserHandler {
+func NewUserHandler(svc *service.UserService) *UserHandler {
 	const (
 		emailRegexPattern = "^\\w+(-+.\\w+)*@\\w+(-.\\w+)*.\\w+(-.\\w+)*$"
 		// 强密码(必须包含大小写字母和数字的组合，可以使用特殊字符，长度在8-10之间)：
@@ -22,6 +24,7 @@ func NewUserHandler() *UserHandler {
 	emailExp := regexp.MustCompile(emailRegexPattern, regexp.None)
 	passwordExp := regexp.MustCompile(passwordRegexPattern, regexp.None)
 	return &UserHandler{
+		svc:         svc,
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
 	}
@@ -70,8 +73,17 @@ func (u *UserHandler) SignUp(c *gin.Context) {
 		c.String(http.StatusOK, "密码必须包含大小写字母和数字的组合，可以使用特殊字符，长度在8-10之间")
 		return
 	}
+	// 调用service方法
+	err = u.svc.SignUp(c, domain.User{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		c.String(http.StatusOK, "系统错误")
+		return
+	}
+
 	c.String(http.StatusOK, "注册成功")
-	fmt.Printf("%+v", req)
 }
 
 func (u *UserHandler) Login(c *gin.Context) {
