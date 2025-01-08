@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/repository"
@@ -8,6 +9,7 @@ import (
 )
 
 var ErrUserDuplicateEmail = repository.ErrUserDuplicateEmail
+var ErrInvalidUserOrPassword = errors.New("非法的用户名或密码")
 
 type UserService struct {
 	repo *repository.UserRepository
@@ -27,12 +29,20 @@ func (svc *UserService) SignUp(ctx *gin.Context, u domain.User) error {
 	return svc.repo.Create(ctx, u)
 }
 
-func (svc *UserService) Login(ctx *gin.Context, email, password string) error {
+func (svc *UserService) Login(ctx *gin.Context, email, password string) (domain.User, error) {
 	// 先找用户
 	u, err := svc.repo.FindByEmail(ctx, email)
-	if err != nil {
-		return err
+	if errors.Is(err, repository.ErrUserNotFound) {
+		return domain.User{}, ErrUserDuplicateEmail
 	}
+	if err != nil {
+		return domain.User{}, err
+	}
+	// 比较密码
 	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	return err
+	if err != nil {
+		// DEBUG
+		return domain.User{}, ErrInvalidUserOrPassword
+	}
+	return u, nil
 }

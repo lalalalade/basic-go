@@ -6,7 +6,10 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
 )
 
-var ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
+var (
+	ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
+	ErrUserNotFound       = dao.ErrUserNotFound
+)
 
 type UserRepository struct {
 	dao *dao.UserDAO
@@ -35,6 +38,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.
 		return domain.User{}, err
 	}
 	return domain.User{
+		Id:       u.Id,
 		Email:    u.Email,
 		Password: u.Password,
 	}, nil

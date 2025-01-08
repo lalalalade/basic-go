@@ -3,6 +3,7 @@ package web
 import (
 	"errors"
 	regexp "github.com/dlclark/regexp2"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/service"
@@ -100,8 +101,22 @@ func (u *UserHandler) Login(c *gin.Context) {
 	if err := c.Bind(&req); err != nil {
 		return
 	}
-	u.svc.Login(c, req.Email, req.Password)
-
+	user, err := u.svc.Login(c, req.Email, req.Password)
+	if errors.Is(err, service.ErrInvalidUserOrPassword) {
+		c.String(http.StatusOK, "用户名或密码不对")
+		return
+	}
+	if err != nil {
+		c.String(http.StatusOK, "系统异常")
+		return
+	}
+	// 登录成功了
+	// 设置session
+	sess := sessions.Default(c)
+	sess.Set("userId", user.Id)
+	sess.Save()
+	c.String(http.StatusOK, "登录成功")
+	return
 }
 
 func (u *UserHandler) Edit(c *gin.Context) {
@@ -109,5 +124,5 @@ func (u *UserHandler) Edit(c *gin.Context) {
 }
 
 func (u *UserHandler) Profile(c *gin.Context) {
-
+	c.String(http.StatusOK, "这是profile")
 }
