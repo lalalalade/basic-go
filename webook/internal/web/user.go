@@ -5,6 +5,7 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	"net/http"
@@ -35,7 +36,7 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 func (u *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	ug.POST("/signup", u.SignUp)
-	ug.POST("/login", u.Login)
+	ug.POST("/login", u.LoginJWT)
 	ug.POST("/edit", u.Edit)
 	ug.GET("/profile", u.Profile)
 }
@@ -90,6 +91,38 @@ func (u *UserHandler) SignUp(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "注册成功")
+}
+
+func (u *UserHandler) LoginJWT(c *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+	var req LoginReq
+	if err := c.Bind(&req); err != nil {
+		return
+	}
+	_, err := u.svc.Login(c, req.Email, req.Password)
+	if errors.Is(err, service.ErrInvalidUserOrPassword) {
+		c.String(http.StatusOK, "用户名或密码不对")
+		return
+	}
+	if err != nil {
+		c.String(http.StatusOK, "系统异常")
+		return
+	}
+	// 登录成功了
+	// 用jwt设置登录态
+	// 生成一个jwt token
+	token := jwt.New(jwt.SigningMethodHS256)
+	tokenStr, err := token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "系统错误")
+		return
+	}
+	c.Header("x-jwt-token", tokenStr)
+	c.String(http.StatusOK, "登录成功")
+	return
 }
 
 func (u *UserHandler) Login(c *gin.Context) {
