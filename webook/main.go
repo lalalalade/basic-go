@@ -3,13 +3,15 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
 	"github.com/lalalalade/basic-go/webook/internal/repository"
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	"github.com/lalalalade/basic-go/webook/internal/web"
 	"github.com/lalalalade/basic-go/webook/internal/web/middleware"
+	"github.com/lalalalade/basic-go/webook/pkg/ginx/middlewares/ratelimit"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"strings"
@@ -48,6 +50,11 @@ func initUser(db *gorm.DB) *web.UserHandler {
 
 func initWebServer() *gin.Engine {
 	server := gin.Default()
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 	server.Use(cors.New(cors.Config{
 		//AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods:  []string{"GET", "POST"},
@@ -66,9 +73,10 @@ func initWebServer() *gin.Engine {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	store := cookie.NewStore([]byte("secret"))
+	store := memstore.NewStore([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"),
+		[]byte("0Pf2r0wZBpXVXLQNdpwCXN4ncnlnZSc3"))
 	server.Use(sessions.Sessions("mysession", store))
-	//server.Use(middleware.NewLoginMiddlewareBuilder().
+	//server.Use(middlewares.NewLoginMiddlewareBuilder().
 	//	IgnorePaths("/users/signup").
 	//	IgnorePaths("/users/login").Build())
 	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
