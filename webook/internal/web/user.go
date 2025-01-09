@@ -9,6 +9,7 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	"net/http"
+	"time"
 )
 
 // UserHandler 定义用户相关路由
@@ -102,7 +103,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 	if err := c.Bind(&req); err != nil {
 		return
 	}
-	_, err := u.svc.Login(c, req.Email, req.Password)
+	user, err := u.svc.Login(c, req.Email, req.Password)
 	if errors.Is(err, service.ErrInvalidUserOrPassword) {
 		c.String(http.StatusOK, "用户名或密码不对")
 		return
@@ -114,7 +115,13 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 	// 登录成功了
 	// 用jwt设置登录态
 	// 生成一个jwt token
-	token := jwt.New(jwt.SigningMethodHS256)
+	claims := UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
+		Uid: user.Id,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
 	if err != nil {
 		c.String(http.StatusInternalServerError, "系统错误")
@@ -169,5 +176,18 @@ func (u *UserHandler) Edit(c *gin.Context) {
 }
 
 func (u *UserHandler) Profile(c *gin.Context) {
+	cls, _ := c.Get("claims")
+	claims, ok := cls.(*UserClaims)
+	if !ok {
+		c.String(http.StatusOK, "系统错误")
+		return
+	}
+	println(claims.Uid)
 	c.String(http.StatusOK, "这是profile")
+}
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	// 声明自己要放进token的数据
+	Uid int64 `json:"uid"`
 }
