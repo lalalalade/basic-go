@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webook-test
+# spec Deployment规格说明
+spec:
+#  副本数量
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webook-test
+# template 描述的是 POD 是什么样的
+  template:
+    metadata:
+      labels:
+        app: webook-test
+#        POD 的具体信息
+    spec:
+      containers:
+        - name: webook-test
+          image: lalalalade/webook-test:v.0.0.1
+          ports:
+            - containerPort: 8080

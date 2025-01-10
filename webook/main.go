@@ -12,16 +12,23 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"strings"
 	"time"
 )
 
 func main() {
 
-	db := initDB()
-	u := initUser(db)
-	server := initWebServer()
-	u.RegisterRoutes(server)
+	//db := initDB()
+	//u := initUser(db)
+	//server := initWebServer()
+
+	//u.RegisterRoutes(server)
+	server := gin.Default()
+	server.GET("/hello", func(c *gin.Context) {
+		c.String(http.StatusOK, "hello world")
+	})
+
 	server.Run(":8080")
 }
 
