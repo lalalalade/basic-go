@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webook-test
+spec:
+  type: LoadBalancer
+  selector:
+    app: webook-test
+  ports:
+    - protocol: TCP
+      name: http
+      port: 88
+      targetPort: 8080
+
+  
