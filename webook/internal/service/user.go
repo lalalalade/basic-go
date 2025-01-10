@@ -33,7 +33,7 @@ func (svc *UserService) Login(ctx *gin.Context, email, password string) (domain.
 	// 先找用户
 	u, err := svc.repo.FindByEmail(ctx, email)
 	if errors.Is(err, repository.ErrUserNotFound) {
-		return domain.User{}, ErrUserDuplicateEmail
+		return domain.User{}, ErrInvalidUserOrPassword
 	}
 	if err != nil {
 		return domain.User{}, err

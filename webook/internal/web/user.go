@@ -116,6 +116,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 	// 用jwt设置登录态
 	// 生成一个jwt token
 	claims := UserClaims{
+		// 实际就是Payload（负载）部分
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
 		},
@@ -123,6 +124,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 		UserAgent: c.Request.UserAgent(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// 算出签名， 返回字符串
 	tokenStr, err := token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
 	if err != nil {
 		c.String(http.StatusInternalServerError, "系统错误")

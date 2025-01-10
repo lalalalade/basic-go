@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
 	"github.com/lalalalade/basic-go/webook/internal/repository"
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
@@ -54,6 +52,7 @@ func initWebServer() *gin.Engine {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
+
 	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 	server.Use(cors.New(cors.Config{
 		//AllowOrigins: []string{"http://localhost:3000"},
@@ -73,9 +72,9 @@ func initWebServer() *gin.Engine {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	store := memstore.NewStore([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"),
-		[]byte("0Pf2r0wZBpXVXLQNdpwCXN4ncnlnZSc3"))
-	server.Use(sessions.Sessions("mysession", store))
+	//store := memstore.NewStore([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"),
+	//	[]byte("0Pf2r0wZBpXVXLQNdpwCXN4ncnlnZSc3"))
+	//server.Use(sessions.Sessions("mysession", store))
 	//server.Use(middlewares.NewLoginMiddlewareBuilder().
 	//	IgnorePaths("/users/signup").
 	//	IgnorePaths("/users/login").Build())

@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// LoginMiddlewareBuilder 登录验证中间件，建造者模式实现
 type LoginMiddlewareBuilder struct {
 	paths []string
 }

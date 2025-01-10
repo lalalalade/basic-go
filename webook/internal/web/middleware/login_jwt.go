@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// LoginJWTMiddlewareBuilder JWT登录校验
+// LoginJWTMiddlewareBuilder JWT登录校验中间件
 type LoginJWTMiddlewareBuilder struct {
 	paths []string
 }
@@ -66,6 +66,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		// 每十秒钟刷新一次
 		now := time.Now()
 		if claims.ExpiresAt.Sub(now) < time.Second*50 {
+			// 生成新的JWT Token
 			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
 			tokenStr, err = token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
 			if err != nil {
