@@ -18,6 +18,6 @@ spec:
     spec:
       containers:
         - name: webook-test
-          image: lalalalade/webook-test:v.0.0.1
+          image: lalalalade/webook-test:v0.0.1
           ports:
             - containerPort: 8080
