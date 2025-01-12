@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webook-test-ingress
+  namespace: ingress-nginx
+spec:
+  ingressClassName: nginx
+  rules:
+#    host 是 test.webook.com时，命中这条
+    - host: test.webook.com
+      http:
+        paths:
+#          - 请求路径前缀是 / 的时候
+#          - 将流量转发过去后面的 webook-test 服务上
+#          - 端口是 88
+          - backend:
+              service:
+                name: webook-test
+                port:
+                  number: 88
+            pathType: Prefix
+            path: /

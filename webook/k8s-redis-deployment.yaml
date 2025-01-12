@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webook-test-redis
+  labels:
+    app: webook-test-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webook-test-redis
+  template:
+    metadata:
+      name: webook-test-redis
+      labels:
+        app: webook-test-redis
+    spec:
+      containers:
+        - name: webook-test-redis
+          image: redis:latest
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always

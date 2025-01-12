@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/lalalalade/basic-go/webook/config"
 	"github.com/lalalalade/basic-go/webook/internal/repository"
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
 	"github.com/lalalalade/basic-go/webook/internal/service"
@@ -12,28 +13,26 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net/http"
 	"strings"
 	"time"
 )
 
 func main() {
 
-	//db := initDB()
-	//u := initUser(db)
-	//server := initWebServer()
+	db := initDB()
+	u := initUser(db)
+	server := initWebServer()
 
-	//u.RegisterRoutes(server)
-	server := gin.Default()
-	server.GET("/hello", func(c *gin.Context) {
-		c.String(http.StatusOK, "hello world")
-	})
+	u.RegisterRoutes(server)
+	//server.GET("/hello", func(c *gin.Context) {
+	//	c.String(http.StatusOK, "hello world")
+	//})
 
 	server.Run(":8080")
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 	if err != nil {
 		// 只会在初始化中panic
 		panic(err)
@@ -57,7 +56,7 @@ func initWebServer() *gin.Engine {
 	server := gin.Default()
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: config.Config.Redis.Addr,
 	})
 
 	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
