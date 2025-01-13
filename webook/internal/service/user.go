@@ -46,3 +46,7 @@ func (svc *UserService) Login(ctx *gin.Context, email, password string) (domain.
 	}
 	return u, nil
 }
+
+func (svc *UserService) Profile(ctx *gin.Context, id int64) (domain.User, error) {
+	panic("implement me")
+}
