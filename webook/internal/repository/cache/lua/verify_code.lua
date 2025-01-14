@@ -12,6 +12,6 @@ elseif expectedCode == code then
     return 0
 else
 --    输错了
-    redis.call("decr", cntKey, -1)
+    redis.call("decr", cntKey)
     return -2
 end

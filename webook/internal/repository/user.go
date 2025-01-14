@@ -14,10 +14,10 @@ var (
 
 type UserRepository struct {
 	dao   *dao.UserDAO
-	cache cache.UserCache
+	cache *cache.UserCache
 }
 
-func NewUserRepository(dao *dao.UserDAO, c cache.UserCache) *UserRepository {
+func NewUserRepository(dao *dao.UserDAO, c *cache.UserCache) *UserRepository {
 	return &UserRepository{
 		dao:   dao,
 		cache: c,

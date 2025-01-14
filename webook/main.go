@@ -5,11 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lalalalade/basic-go/webook/config"
 	"github.com/lalalalade/basic-go/webook/internal/repository"
+	"github.com/lalalalade/basic-go/webook/internal/repository/cache"
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
 	"github.com/lalalalade/basic-go/webook/internal/service"
+	"github.com/lalalalade/basic-go/webook/internal/service/sms/memory"
 	"github.com/lalalalade/basic-go/webook/internal/web"
 	"github.com/lalalalade/basic-go/webook/internal/web/middleware"
-	"github.com/lalalalade/basic-go/webook/pkg/ginx/middlewares/ratelimit"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -20,7 +21,8 @@ import (
 func main() {
 
 	db := initDB()
-	u := initUser(db)
+	rdb := initRedis()
+	u := initUser(db, rdb)
 	server := initWebServer()
 
 	u.RegisterRoutes(server)
@@ -44,22 +46,32 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initUser(db *gorm.DB) *web.UserHandler {
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 	ud := dao.NewUserDAO(db)
-	repo := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(rdb)
+	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
-	u := web.NewUserHandler(svc)
+	codeCache := cache.NewCodeCache(rdb)
+	codeRepo := repository.NewCodeRepository(codeCache)
+	smsSvc := memory.NewService()
+	codeSvc := service.NewCodeService(codeRepo, smsSvc)
+	u := web.NewUserHandler(svc, codeSvc)
 	return u
 }
 
+func initRedis() redis.Cmdable {
+	return redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+}
 func initWebServer() *gin.Engine {
 	server := gin.Default()
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: config.Config.Redis.Addr,
-	})
-
-	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+	//redisClient := redis.NewClient(&redis.Options{
+	//	Addr: config.Config.Redis.Addr,
+	//})
+	//
+	//server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 	server.Use(cors.New(cors.Config{
 		//AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods:  []string{"GET", "POST"},
@@ -86,6 +98,8 @@ func initWebServer() *gin.Engine {
 	//	IgnorePaths("/users/login").Build())
 	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
 		IgnorePaths("/users/signup").
+		IgnorePaths("/users/login_sms/code/send").
+		IgnorePaths("/users/login_sms").
 		IgnorePaths("/users/login").Build())
 	return server
 }

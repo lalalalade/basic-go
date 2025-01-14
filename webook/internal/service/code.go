@@ -15,6 +15,10 @@ type CodeService struct {
 	smsSvc sms.Service
 }
 
+func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
+	return &CodeService{repo: repo, smsSvc: smsSvc}
+}
+
 // Send 生成一个随机的验证码发送
 func (svc *CodeService) Send(ctx context.Context, biz, phone string) error {
 	code := svc.generateCode()
