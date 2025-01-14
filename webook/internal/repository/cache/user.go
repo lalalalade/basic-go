@@ -17,9 +17,9 @@ type UserCache struct {
 }
 
 // NewUserCache
-// A 用到了 B， B 一定是接口
-// A 用到了 B, B 一定是 A 的字段
-// A 用到了 B, A 绝对不初始化 B, 而是外面注入
+// A 用到了 B， B 一定是接口  => 保证面向接口
+// A 用到了 B, B 一定是 A 的字段 => 规避包变量 包方法
+// A 用到了 B, A 绝对不初始化 B, 而是外面注入  => 保持依赖注入和依赖反转
 func NewUserCache(client redis.Cmdable) *UserCache {
 	return &UserCache{
 		client:     client,
@@ -27,7 +27,6 @@ func NewUserCache(client redis.Cmdable) *UserCache {
 	}
 }
 
-// 只要err 为 nil， 就认为缓存有数据
 // 如果没有数据， 返回特定error
 func (cache *UserCache) Get(ctx context.Context, id int64) (domain.User, error) {
 	key := cache.key(id)
