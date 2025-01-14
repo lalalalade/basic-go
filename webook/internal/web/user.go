@@ -179,7 +179,7 @@ func (u *UserHandler) SignUp(c *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	})
-	if errors.Is(err, service.ErrUserDuplicateEmail) {
+	if errors.Is(err, service.ErrUserDuplicate) {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "邮箱冲突",
