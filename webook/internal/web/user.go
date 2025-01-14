@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const biz = "login"
+
 // UserHandler 定义用户相关路由
 type UserHandler struct {
 	svc         *service.UserService
@@ -50,12 +52,45 @@ func (u *UserHandler) SendLoginSMSCode(c *gin.Context) {
 	type Req struct {
 		Phone string `json:"phone"`
 	}
-	const biz = "login"
 	var req Req
 	if err := c.Bind(&req); err != nil {
 		return
 	}
 	err := u.codeSvc.Send(c, biz, req.Phone)
+	switch err {
+	case nil:
+		c.JSON(http.StatusOK, Result{
+			Msg: "发送成功",
+		})
+	case service.ErrCodeSendTooMany:
+		c.JSON(http.StatusOK, Result{
+			Msg: "发送太频繁，请稍后重试",
+		})
+	default:
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+	}
+}
+
+func (u *UserHandler) LoginSMS(c *gin.Context) {
+	type Req struct {
+		Phone string `json:"phone"`
+		Code  string `json:"code"`
+	}
+	var req Req
+	if err := c.Bind(&req); err != nil {
+		return
+	}
+	if req.Phone == "" {
+		c.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "输入有误",
+		})
+		return
+	}
+	ok, err := u.codeSvc.Verify(c, biz, req.Phone, req.Code)
 	if err != nil {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -63,13 +98,31 @@ func (u *UserHandler) SendLoginSMSCode(c *gin.Context) {
 		})
 		return
 	}
+	if !ok {
+		c.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "验证码错误",
+		})
+		return
+	}
+	user, err := u.svc.FindOrCreate(c, req.Phone)
+	if err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
+	if err = u.setJWTToken(c, user.Id); err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
 	c.JSON(http.StatusOK, Result{
-		Msg: "发送成功",
+		Msg: "验证码校验成功",
 	})
-}
-
-func (u *UserHandler) LoginSMS(c *gin.Context) {
-
 }
 func (u *UserHandler) SignUp(c *gin.Context) {
 	type SignUpReq struct {
@@ -173,29 +226,36 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 	// 登录成功了
 	// 用jwt设置登录态
 	// 生成一个jwt token
+	if err = u.setJWTToken(c, user.Id); err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, Result{
+		Msg: "登录成功",
+	})
+	return
+}
+
+func (u *UserHandler) setJWTToken(c *gin.Context, uid int64) error {
 	claims := UserClaims{
 		// 实际就是Payload（负载）部分
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
 		},
-		Uid:       user.Id,
+		Uid:       uid,
 		UserAgent: c.Request.UserAgent(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// 算出签名， 返回字符串
 	tokenStr, err := token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, Result{
-			Code: 5,
-			Msg:  "系统错误",
-		})
-		return
+		return err
 	}
 	c.Header("x-jwt-token", tokenStr)
-	c.JSON(http.StatusOK, Result{
-		Msg: "登录成功",
-	})
-	return
+	return nil
 }
 
 func (u *UserHandler) Login(c *gin.Context) {

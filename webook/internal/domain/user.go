@@ -8,8 +8,8 @@ type User struct {
 	Id         int64
 	Email      string
 	Password   string
+	Phone      string
 	CreateTime time.Time
-	UpdateTime time.Time
 }
 
 //type Address struct {

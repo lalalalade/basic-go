@@ -2,14 +2,16 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/repository/cache"
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
+	"time"
 )
 
 var (
-	ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
-	ErrUserNotFound       = dao.ErrUserNotFound
+	ErrUserDuplicate = dao.ErrUserDuplicate
+	ErrUserNotFound  = dao.ErrUserNotFound
 )
 
 type UserRepository struct {
@@ -25,10 +27,7 @@ func NewUserRepository(dao *dao.UserDAO, c *cache.UserCache) *UserRepository {
 }
 
 func (r *UserRepository) Create(ctx context.Context, u domain.User) error {
-	return r.dao.Insert(ctx, dao.User{
-		Email:    u.Email,
-		Password: u.Password,
-	})
+	return r.dao.Insert(ctx, r.domainToPo(u))
 }
 
 func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
@@ -41,11 +40,7 @@ func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, e
 	if err != nil {
 		return domain.User{}, err
 	}
-	u = domain.User{
-		Id:       ue.Id,
-		Email:    ue.Email,
-		Password: ue.Password,
-	}
+	u = r.poToDomain(ue)
 	go func() {
 		err = r.cache.Set(ctx, u)
 		if err != nil {
@@ -60,9 +55,37 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.
 	if err != nil {
 		return domain.User{}, err
 	}
+	return r.poToDomain(u), err
+}
+
+func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
+	u, err := r.dao.FindByPhone(ctx, phone)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return r.poToDomain(u), err
+}
+
+func (r *UserRepository) poToDomain(u dao.User) domain.User {
 	return domain.User{
-		Id:       u.Id,
-		Email:    u.Email,
-		Password: u.Password,
-	}, nil
+		Id:         u.Id,
+		Email:      u.Email.String,
+		Phone:      u.Phone.String,
+		Password:   u.Password,
+		CreateTime: time.UnixMilli(u.CreateTime),
+	}
+}
+func (r *UserRepository) domainToPo(u domain.User) dao.User {
+	return dao.User{
+		Id: u.Id,
+		Email: sql.NullString{
+			String: u.Email,
+			Valid:  u.Email != "",
+		},
+		Phone: sql.NullString{
+			String: u.Phone,
+			Valid:  u.Phone != "",
+		},
+		CreateTime: u.CreateTime.UnixMilli(),
+	}
 }
