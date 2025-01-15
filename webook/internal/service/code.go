@@ -27,7 +27,7 @@ func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeSe
 // Send 生成一个随机的验证码发送
 func (svc *CodeService) Send(ctx context.Context, biz, phone string) error {
 	code := svc.generateCode()
-	err := svc.repo.Store(ctx, code, biz, phone)
+	err := svc.repo.Store(ctx, biz, phone, code)
 	if err != nil {
 		return err
 	}
