@@ -19,13 +19,13 @@ var _ handler = &UserHandler{}
 
 // UserHandler 定义用户相关路由
 type UserHandler struct {
-	svc         *service.UserService
-	codeSvc     *service.CodeService
+	svc         service.UserService
+	codeSvc     service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
 }
 
-func NewUserHandler(svc *service.UserService, codeSvc *service.CodeService) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
 	const (
 		emailRegexPattern = "^\\w+(-+.\\w+)*@\\w+(-.\\w+)*.\\w+(-.\\w+)*$"
 		// 强密码(必须包含大小写字母和数字的组合，可以使用特殊字符，长度在8-10之间)：
@@ -127,6 +127,7 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 		Msg: "验证码校验成功",
 	})
 }
+
 func (u *UserHandler) SignUp(c *gin.Context) {
 	type SignUpReq struct {
 		Email           string `json:"email" binding:"required"`
