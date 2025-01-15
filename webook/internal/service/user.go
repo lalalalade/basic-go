@@ -48,7 +48,9 @@ func (svc *UserService) Login(ctx context.Context, email, password string) (doma
 }
 
 func (svc *UserService) Profile(ctx context.Context, id int64) (domain.User, error) {
-	panic("implement me")
+	u, err := svc.repo.FindById(ctx, id)
+
+	return u, err
 }
 
 func (svc *UserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
