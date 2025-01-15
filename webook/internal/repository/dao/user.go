@@ -19,6 +19,7 @@ type UserDAO interface {
 	FindByEmail(ctx context.Context, email string) (User, error)
 	FindByPhone(ctx context.Context, phone string) (User, error)
 	FindById(ctx context.Context, id int64) (User, error)
+	UpdateNonZeroFields(ctx context.Context, u User) error
 }
 
 type GORMUserDAO struct {
@@ -42,6 +43,10 @@ func (dao *GORMUserDAO) Insert(ctx context.Context, u User) error {
 		}
 	}
 	return err
+}
+
+func (dao *GORMUserDAO) UpdateNonZeroFields(ctx context.Context, u User) error {
+	return dao.db.Updates(u).Error
 }
 
 func (dao *GORMUserDAO) FindByEmail(ctx context.Context, email string) (User, error) {
@@ -68,7 +73,10 @@ type User struct {
 	Email    sql.NullString `gorm:"unique"`
 	Password string
 	// 唯一索引允许有多个空值，但是不允许有多个空字符串
-	Phone sql.NullString `gorm:"unique"`
+	Phone    sql.NullString `gorm:"unique"`
+	Nickname sql.NullString
+	Info     sql.NullString
+	Birthday sql.NullInt64
 	// 创建时间，毫秒数
 	CreateTime int64
 	UpdateTime int64

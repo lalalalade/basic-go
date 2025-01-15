@@ -16,6 +16,7 @@ type UserService interface {
 	Login(ctx context.Context, email, password string) (domain.User, error)
 	Profile(ctx context.Context, id int64) (domain.User, error)
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
+	UpdateNoneSensitiveInfo(ctx context.Context, user domain.User) error
 }
 
 type userService struct {
@@ -73,4 +74,11 @@ func (svc *userService) FindOrCreate(ctx context.Context, phone string) (domain.
 		return domain.User{}, err
 	}
 	return svc.repo.FindByPhone(ctx, phone)
+}
+
+func (svc *userService) UpdateNoneSensitiveInfo(ctx context.Context, user domain.User) error {
+	user.Email = ""
+	user.Phone = ""
+	user.Password = ""
+	return svc.repo.Update(ctx, user)
 }

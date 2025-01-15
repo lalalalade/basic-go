@@ -46,7 +46,7 @@ func (u *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/signup", u.SignUp)
 	ug.POST("/login", u.LoginJWT)
 	ug.POST("/edit", u.Edit)
-	ug.GET("/profile", u.Profile)
+	ug.GET("/profile", u.ProfileJWT)
 	ug.POST("/login_sms/code/send", u.SendLoginSMSCode)
 	ug.POST("/login_sms", u.LoginSMS)
 }
@@ -264,8 +264,8 @@ func (u *UserHandler) setJWTToken(c *gin.Context, uid int64) error {
 
 func (u *UserHandler) Login(c *gin.Context) {
 	type LoginReq struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	var req LoginReq
 	if err := c.Bind(&req); err != nil {
@@ -312,21 +312,80 @@ func (u *UserHandler) Logout(c *gin.Context) {
 	})
 }
 func (u *UserHandler) Edit(c *gin.Context) {
-
-}
-
-func (u *UserHandler) Profile(c *gin.Context) {
-	cls, _ := c.Get("claims")
-	claims, ok := cls.(*UserClaims)
-	if !ok {
+	type Req struct {
+		Nickname string `json:"nickname" binding:"required"`
+		Birthday string `json:"birthday" binding:"required"`
+		Info     string `json:"info" binding:"required"`
+	}
+	var req Req
+	if err := c.Bind(&req); err != nil {
+		return
+	}
+	if req.Nickname == "" {
+		c.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "昵称不能为空",
+		})
+		return
+	}
+	if len(req.Info) > 1024 {
+		c.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "简介过长",
+		})
+		return
+	}
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "日期格式不对",
+		})
+		return
+	}
+	uc := c.MustGet("claims").(*UserClaims)
+	err = u.svc.UpdateNoneSensitiveInfo(c, domain.User{
+		Id:       uc.Uid,
+		Nickname: req.Nickname,
+		Birthday: birthday,
+		Info:     req.Info,
+	})
+	if err != nil {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
 		return
 	}
-	println(claims.Uid)
-	c.String(http.StatusOK, "这是profile")
+	c.JSON(http.StatusOK, Result{
+		Msg: "OK",
+	})
+}
+
+func (u *UserHandler) ProfileJWT(c *gin.Context) {
+	type Profile struct {
+		Email    string
+		Phone    string
+		Nickname string
+		Birthday string
+		Info     string
+	}
+	uc := c.MustGet("claims").(UserClaims)
+	user, err := u.svc.Profile(c, uc.Uid)
+	if err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, Profile{
+		Email:    user.Email,
+		Phone:    user.Phone,
+		Nickname: user.Nickname,
+		Birthday: user.Birthday.Format(time.DateOnly),
+		Info:     user.Info,
+	})
 }
 
 type UserClaims struct {
