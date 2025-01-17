@@ -21,6 +21,7 @@ func NewService(appId, signName string, client *sms.Client) *Service {
 		client:   client,
 	}
 }
+
 func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
 	req := sms.NewSendSmsRequest()
 	req.SmsSdkAppId = s.appId
