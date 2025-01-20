@@ -23,6 +23,7 @@ func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
 		corsHdl(),
 		middleware.NewLoginJWTMiddlewareBuilder().
 			IgnorePaths("/users/signup").
+			IgnorePaths("/users/refresh_token").
 			IgnorePaths("/users/login_sms/code/send").
 			IgnorePaths("/users/login_sms").
 			IgnorePaths("/oauth2/wechat/authurl").
@@ -36,7 +37,7 @@ func corsHdl() gin.HandlerFunc {
 		//AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods:  []string{"GET", "POST"},
 		AllowHeaders:  []string{"Content-Type", "Authorization"},
-		ExposeHeaders: []string{"x-jwt-token"},
+		ExposeHeaders: []string{"x-jwt-token", "x-refresh-token"},
 		// 是否允许带 cookie 之类的东西
 		AllowCredentials: true,
 		// 那些来源是允许的

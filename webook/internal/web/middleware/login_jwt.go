@@ -1,18 +1,18 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lalalalade/basic-go/webook/internal/web"
-	"log"
+	"github.com/redis/go-redis/v9"
 	"net/http"
-	"strings"
-	"time"
 )
 
 // LoginJWTMiddlewareBuilder JWT登录校验中间件
 type LoginJWTMiddlewareBuilder struct {
 	paths []string
+	cmd   redis.Cmdable
 }
 
 func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
@@ -33,18 +33,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			}
 		}
 		// 现在使用jwt来校验
-		tokenHeader := c.GetHeader("Authorization")
-		if tokenHeader == "" {
-			// 没登录
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		segs := strings.Split(tokenHeader, " ")
-		if len(segs) != 2 {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		tokenStr := segs[1]
+		tokenStr := web.ExtractToken(c)
 		claims := &web.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"), nil
@@ -63,16 +52,10 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		// 每十秒钟刷新一次
-		now := time.Now()
-		if claims.ExpiresAt.Sub(now) < time.Second*50 {
-			// 生成新的JWT Token
-			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
-			tokenStr, err = token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
-			if err != nil {
-				log.Println("jwt续约失败", err)
-			}
-			c.Header("x-jwt-token", tokenStr)
+		cnt, err := l.cmd.Exists(c, fmt.Sprintf("users:ssid:%s", claims.Ssid)).Result()
+		if err != nil || cnt > 0 {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
 		}
 		c.Set("claims", claims)
 	}

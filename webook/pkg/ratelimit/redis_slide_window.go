@@ -19,7 +19,7 @@ type RedisSlidingWindow struct {
 	rate int
 }
 
-func NewRedisSlidingWindow(cmd redis.Cmdable, interval time.Duration, rate int) Limiter {
+func NewRedisSlidingWindowLimiter(cmd redis.Cmdable, interval time.Duration, rate int) Limiter {
 	return &RedisSlidingWindow{cmd, interval, rate}
 }
 

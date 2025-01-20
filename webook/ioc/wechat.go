@@ -1,7 +1,8 @@
 package ioc
 
 import (
-	"github.com/lalalalade/basic-go/webook/internal/service/oath2/wechat"
+	"github.com/lalalalade/basic-go/webook/internal/service/oauth2/wechat"
+	"github.com/lalalalade/basic-go/webook/internal/web"
 	"os"
 )
 
@@ -15,4 +16,10 @@ func InitWechatService() wechat.Service {
 		panic("没有找到环境变量 WECHAT_APP_SECRET")
 	}
 	return wechat.NewService(appId, appSecret)
+}
+
+func NewWechatHandlerConfig() web.WechatHandlerConfig {
+	return web.WechatHandlerConfig{
+		Secure: false,
+	}
 }
