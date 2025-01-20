@@ -5,7 +5,6 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	"net/http"
@@ -23,6 +22,7 @@ type UserHandler struct {
 	codeSvc     service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
+	jwtHandler
 }
 
 func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
@@ -243,25 +243,6 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 	return
 }
 
-func (u *UserHandler) setJWTToken(c *gin.Context, uid int64) error {
-	claims := UserClaims{
-		// 实际就是Payload（负载）部分
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
-		},
-		Uid:       uid,
-		UserAgent: c.Request.UserAgent(),
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// 算出签名， 返回字符串
-	tokenStr, err := token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
-	if err != nil {
-		return err
-	}
-	c.Header("x-jwt-token", tokenStr)
-	return nil
-}
-
 func (u *UserHandler) Login(c *gin.Context) {
 	type LoginReq struct {
 		Email    string `json:"email"`
@@ -386,11 +367,4 @@ func (u *UserHandler) ProfileJWT(c *gin.Context) {
 		Birthday: user.Birthday.Format(time.DateOnly),
 		Info:     user.Info,
 	})
-}
-
-type UserClaims struct {
-	jwt.RegisteredClaims
-	UserAgent string `json:"userAgent"`
-	// 声明自己要放进token的数据
-	Uid int64 `json:"uid"`
 }

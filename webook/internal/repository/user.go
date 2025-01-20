@@ -19,6 +19,7 @@ type UserRepository interface {
 	FindById(ctx context.Context, id int64) (domain.User, error)
 	FindByEmail(ctx context.Context, email string) (domain.User, error)
 	FindByPhone(ctx context.Context, phone string) (domain.User, error)
+	FindByWechat(ctx context.Context, openID string) (domain.User, error)
 	Update(ctx context.Context, user domain.User) error
 }
 
@@ -81,16 +82,28 @@ func (r *CachedUserRepository) FindByPhone(ctx context.Context, phone string) (d
 	return r.poToDomain(u), err
 }
 
+func (r *CachedUserRepository) FindByWechat(ctx context.Context, openID string) (domain.User, error) {
+	u, err := r.dao.FindByWechat(ctx, openID)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return r.poToDomain(u), err
+}
+
 func (r *CachedUserRepository) poToDomain(u dao.User) domain.User {
 	var birthday time.Time
 	if u.Birthday.Valid {
 		birthday = time.UnixMilli(u.Birthday.Int64)
 	}
 	return domain.User{
-		Id:         u.Id,
-		Email:      u.Email.String,
-		Phone:      u.Phone.String,
-		Password:   u.Password,
+		Id:       u.Id,
+		Email:    u.Email.String,
+		Phone:    u.Phone.String,
+		Password: u.Password,
+		WechatInfo: domain.WechatInfo{
+			UnionId: u.WechatUnionID.String,
+			OpenID:  u.WechatOpenID.String,
+		},
 		Info:       u.Info.String,
 		Nickname:   u.Nickname.String,
 		Birthday:   birthday,
@@ -107,6 +120,14 @@ func (r *CachedUserRepository) domainToPo(u domain.User) dao.User {
 		Phone: sql.NullString{
 			String: u.Phone,
 			Valid:  u.Phone != "",
+		},
+		WechatOpenID: sql.NullString{
+			String: u.WechatInfo.OpenID,
+			Valid:  u.WechatInfo.OpenID != "",
+		},
+		WechatUnionID: sql.NullString{
+			String: u.WechatInfo.OpenID,
+			Valid:  u.WechatInfo.OpenID != "",
 		},
 		Birthday: sql.NullInt64{
 			Int64: u.Birthday.UnixMilli(),

@@ -20,6 +20,7 @@ type UserDAO interface {
 	FindByPhone(ctx context.Context, phone string) (User, error)
 	FindById(ctx context.Context, id int64) (User, error)
 	UpdateNonZeroFields(ctx context.Context, u User) error
+	FindByWechat(ctx context.Context, openID string) (User, error)
 }
 
 type GORMUserDAO struct {
@@ -54,6 +55,7 @@ func (dao *GORMUserDAO) FindByEmail(ctx context.Context, email string) (User, er
 	err := dao.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
 	return u, err
 }
+
 func (dao *GORMUserDAO) FindByPhone(ctx context.Context, phone string) (User, error) {
 	var u User
 	err := dao.db.WithContext(ctx).Where("phone = ?", phone).First(&u).Error
@@ -66,6 +68,12 @@ func (dao *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	return u, err
 }
 
+func (dao *GORMUserDAO) FindByWechat(ctx context.Context, openID string) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("wechat_open_id = ?", openID).First(&u).Error
+	return u, err
+}
+
 // User 直接对应数据库表结构
 // 有些人叫做 entity，有些人叫做model，有些人叫做 PO(persistent object)
 type User struct {
@@ -73,7 +81,11 @@ type User struct {
 	Email    sql.NullString `gorm:"unique"`
 	Password string
 	// 唯一索引允许有多个空值，但是不允许有多个空字符串
-	Phone    sql.NullString `gorm:"unique"`
+	Phone sql.NullString `gorm:"unique"`
+	// 微信字段
+	WechatUnionID sql.NullString `gorm:"unique"`
+	WechatOpenID  sql.NullString `gorm:"unique"`
+
 	Nickname sql.NullString
 	Info     sql.NullString
 	Birthday sql.NullInt64
