@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	"github.com/lalalalade/basic-go/webook/internal/service/oauth2/wechat"
+	ijwt "github.com/lalalalade/basic-go/webook/internal/web/jwt"
 	uuid "github.com/lithammer/shortuuid/v4"
 	"net/http"
 	"time"
@@ -15,7 +16,7 @@ import (
 type OAuth2WechatHandler struct {
 	svc     wechat.Service
 	userSvc service.UserService
-	jwtHandler
+	ijwt.Handler
 	stateKey []byte
 	cfg      WechatHandlerConfig
 }
@@ -24,13 +25,14 @@ type WechatHandlerConfig struct {
 	Secure bool
 }
 
-func NewOAuth2WechatHandler(svc wechat.Service, userSvc service.UserService, cfg WechatHandlerConfig) *OAuth2WechatHandler {
+func NewOAuth2WechatHandler(svc wechat.Service, userSvc service.UserService,
+	cfg WechatHandlerConfig, jwtHdl ijwt.Handler) *OAuth2WechatHandler {
 	return &OAuth2WechatHandler{
-		svc:        svc,
-		userSvc:    userSvc,
-		stateKey:   []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf1"),
-		cfg:        cfg,
-		jwtHandler: newJwtHandler(),
+		svc:      svc,
+		userSvc:  userSvc,
+		stateKey: []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf1"),
+		cfg:      cfg,
+		Handler:  jwtHdl,
 	}
 }
 
@@ -88,7 +90,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		return
 	}
 	// 从userService拿uid
-	err = h.setLoginToken(ctx, u.Id)
+	err = h.SetLoginToken(ctx, u.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,

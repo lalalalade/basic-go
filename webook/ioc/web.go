@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/lalalalade/basic-go/webook/internal/web"
+	ijwt "github.com/lalalalade/basic-go/webook/internal/web/jwt"
 	"github.com/lalalalade/basic-go/webook/internal/web/middleware"
 	"github.com/redis/go-redis/v9"
 	"strings"
@@ -18,10 +19,10 @@ func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHdl
 	return server
 }
 
-func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
+func InitMiddlewares(redisClient redis.Cmdable, jwtHdl ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		corsHdl(),
-		middleware.NewLoginJWTMiddlewareBuilder().
+		middleware.NewLoginJWTMiddlewareBuilder(jwtHdl).
 			IgnorePaths("/users/signup").
 			IgnorePaths("/users/refresh_token").
 			IgnorePaths("/users/login_sms/code/send").

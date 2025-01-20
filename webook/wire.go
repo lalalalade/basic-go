@@ -10,6 +10,7 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	"github.com/lalalalade/basic-go/webook/internal/web"
+	ijwt "github.com/lalalalade/basic-go/webook/internal/web/jwt"
 	"github.com/lalalalade/basic-go/webook/ioc"
 )
 
@@ -25,7 +26,7 @@ func InitWebServer() *gin.Engine {
 		repository.NewUserRepository, repository.NewCodeRepository,
 		// 初始化service
 		service.NewUserService, service.NewCodeService, ioc.InitSMSService, ioc.InitWechatService,
-		web.NewUserHandler, web.NewOAuth2WechatHandler, ioc.NewWechatHandlerConfig,
+		web.NewUserHandler, web.NewOAuth2WechatHandler, ioc.NewWechatHandlerConfig, ijwt.NewRedisJWTHandler,
 		ioc.InitWebServer, ioc.InitMiddlewares)
 	return gin.Default()
 }

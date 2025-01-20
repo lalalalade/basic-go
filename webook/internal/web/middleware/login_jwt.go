@@ -1,22 +1,22 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lalalalade/basic-go/webook/internal/web"
-	"github.com/redis/go-redis/v9"
+	ijwt "github.com/lalalalade/basic-go/webook/internal/web/jwt"
 	"net/http"
 )
 
 // LoginJWTMiddlewareBuilder JWT登录校验中间件
 type LoginJWTMiddlewareBuilder struct {
 	paths []string
-	cmd   redis.Cmdable
+	ijwt.Handler
 }
 
-func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
-	return &LoginJWTMiddlewareBuilder{}
+func NewLoginJWTMiddlewareBuilder(jwtHdl ijwt.Handler) *LoginJWTMiddlewareBuilder {
+	return &LoginJWTMiddlewareBuilder{
+		Handler: jwtHdl,
+	}
 }
 
 func (l *LoginJWTMiddlewareBuilder) IgnorePaths(path string) *LoginJWTMiddlewareBuilder {
@@ -33,8 +33,8 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			}
 		}
 		// 现在使用jwt来校验
-		tokenStr := web.ExtractToken(c)
-		claims := &web.UserClaims{}
+		tokenStr := l.ExtractToken(c)
+		claims := ijwt.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"), nil
 		})
@@ -52,8 +52,8 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		cnt, err := l.cmd.Exists(c, fmt.Sprintf("users:ssid:%s", claims.Ssid)).Result()
-		if err != nil || cnt > 0 {
+		err = l.CheckSession(c, claims.Ssid)
+		if err != nil {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
