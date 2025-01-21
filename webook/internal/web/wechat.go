@@ -44,7 +44,7 @@ func (h *OAuth2WechatHandler) RegisterRoutes(server *gin.Engine) {
 
 func (h *OAuth2WechatHandler) AuthURL(ctx *gin.Context) {
 	state := uuid.New()
-	url, err := h.svc.AuthURL(ctx, "")
+	url, err := h.svc.AuthURL(ctx, state)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
