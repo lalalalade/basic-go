@@ -10,6 +10,7 @@ services:
       # 设置初始化脚本
       - ./script/mysql/:/docker-entrypoint-initdb.d/
     ports:
+#      宿主机 13306 端口映射到容器的 3306 端口
       - "13316:3306"
   redis:
     image: 'bitnami/redis:latest'
@@ -17,4 +18,9 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - '6379:6379'
-
+  etcd:
+    image: 'bitnami/etcd:latest'
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+      - 12379:2379

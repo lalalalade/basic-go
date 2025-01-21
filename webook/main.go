@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 	"net/http"
 )
 
@@ -17,6 +18,18 @@ func main() {
 		ctx.String(http.StatusOK, "hello world")
 	})
 	server.Run(":8080")
+}
+
+func initViperRemote() {
+	viper.SetConfigType("yaml")
+	err := viper.AddRemoteProvider("etcd3", "127.0.0.1:12379", "/webook")
+	if err != nil {
+		panic(err)
+	}
+	err = viper.ReadRemoteConfig()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initViper() {

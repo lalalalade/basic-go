@@ -15,6 +15,7 @@ func InitDB() *gorm.DB {
 	var cfg Config = Config{
 		DSN: "root:root@tcp(localhost:13316)/webook_default",
 	}
+	// remote下注意key不能含.
 	err := viper.UnmarshalKey("db.mysql", &cfg)
 	if err != nil {
 		panic(fmt.Errorf("mysql初始化配置失败: %v \n", err))
