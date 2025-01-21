@@ -35,8 +35,9 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		// 现在使用jwt来校验
 		tokenStr := l.ExtractToken(c)
 		claims := ijwt.UserClaims{}
-		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"), nil
+		// 解析token
+		token, err := jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte(ijwt.AtKey), nil
 		})
 		if err != nil {
 			c.AbortWithStatus(http.StatusUnauthorized)

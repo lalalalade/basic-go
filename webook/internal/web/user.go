@@ -9,7 +9,6 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	ijwt "github.com/lalalalade/basic-go/webook/internal/web/jwt"
-	"github.com/redis/go-redis/v9"
 	"net/http"
 	"time"
 )
@@ -26,7 +25,6 @@ type UserHandler struct {
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
 	ijwt.Handler
-	cmd redis.Cmdable
 }
 
 func NewUserHandler(svc service.UserService, codeSvc service.CodeService, jwtHdl ijwt.Handler) *UserHandler {
@@ -373,7 +371,7 @@ func (u *UserHandler) ProfileJWT(c *gin.Context) {
 		Birthday string
 		Info     string
 	}
-	uc := c.MustGet("claims").(*ijwt.UserClaims)
+	uc := c.MustGet("claims").(ijwt.UserClaims)
 	user, err := u.svc.Profile(c, uc.Uid)
 	if err != nil {
 		c.JSON(http.StatusOK, Result{
