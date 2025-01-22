@@ -7,6 +7,8 @@ import (
 	"github.com/lalalalade/basic-go/webook/pkg/ratelimit"
 )
 
+var _ sms.Service = (*RatelimitSMSService)(nil)
+
 var errLimited = fmt.Errorf("触发了限流")
 
 type RatelimitSMSService struct {

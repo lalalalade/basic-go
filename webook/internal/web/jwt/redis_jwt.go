@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"time"
 )
+
+var _ Handler = (*RedisJWTHandler)(nil)
 
 // 用于签名的字符串
 var (
@@ -104,10 +107,20 @@ func (h *RedisJWTHandler) ClearToken(ctx *gin.Context) error {
 		"", time.Hour*24*7).Err()
 }
 
-// CheckSession 判断ssid是否在redis中 在-用户已退出登录
+// CheckSession 判断ssid是否在redis中 在->用户已退出登录
 func (h *RedisJWTHandler) CheckSession(ctx *gin.Context, ssid string) error {
-	_, err := h.cmd.Exists(ctx, fmt.Sprintf("users:ssid:%s", ssid)).Result()
-	return err
+	val, err := h.cmd.Exists(ctx, fmt.Sprintf("users:ssid:%s", ssid)).Result()
+	switch err {
+	case redis.Nil:
+		return nil
+	case nil:
+		if val == 0 {
+			return nil
+		}
+		return errors.New("session已经无效了")
+	default:
+		return err
+	}
 }
 
 // ExtractToken 提取token字符串

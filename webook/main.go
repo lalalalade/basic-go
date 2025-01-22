@@ -5,12 +5,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"go.uber.org/zap"
 	"net/http"
 )
 
 func main() {
 
 	initViper()
+	initLogger()
 	server := InitWebServer()
 
 	// 注册路由
@@ -18,6 +20,16 @@ func main() {
 		ctx.String(http.StatusOK, "hello world")
 	})
 	server.Run(":8080")
+}
+
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	zap.L().Info("replace 之前")
+	zap.ReplaceGlobals(logger)
+	zap.L().Info("hello, 你搞好了")
 }
 
 func initViperRemote() {

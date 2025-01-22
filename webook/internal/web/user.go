@@ -9,6 +9,7 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/service"
 	ijwt "github.com/lalalalade/basic-go/webook/internal/web/jwt"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -16,7 +17,7 @@ import (
 const biz = "login"
 
 // 确保 UserHandler 实现了 handler 接口
-var _ handler = &UserHandler{}
+var _ handler = (*UserHandler)(nil)
 
 // UserHandler 定义用户相关路由
 type UserHandler struct {
@@ -103,6 +104,7 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
+		zap.L().Error("校验验证码出错", zap.Error(err))
 		return
 	}
 	if !ok {
@@ -403,6 +405,7 @@ func (u *UserHandler) RefreshToken(c *gin.Context) {
 	}
 	err = u.CheckSession(c, rc.Ssid)
 	if err != nil {
+		zap.L().Error("redis查询ssid出现异常", zap.Error(err))
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -410,6 +413,7 @@ func (u *UserHandler) RefreshToken(c *gin.Context) {
 	err = u.SetJWTToken(c, rc.Uid, rc.Ssid)
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
+		zap.L().Error("设置jwt token出现异常", zap.Error(err))
 		return
 	}
 	c.JSON(http.StatusOK, Result{

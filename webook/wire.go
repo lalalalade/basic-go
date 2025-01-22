@@ -17,7 +17,7 @@ import (
 func InitWebServer() *gin.Engine {
 	wire.Build(
 		// 最基础的第三方依赖
-		ioc.InitDB, ioc.InitRedis,
+		ioc.InitDB, ioc.InitRedis, ioc.InitLogger,
 		// 初始化DAO
 		dao.NewUserDAO,
 		// 初始化缓存

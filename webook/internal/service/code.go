@@ -10,6 +10,8 @@ import (
 
 const codeTplId = "1865669"
 
+var _ CodeService = (*codeService)(nil)
+
 var (
 	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
 	ErrCodeSendTooMany        = repository.ErrCodeSendTooMany
@@ -37,6 +39,9 @@ func (svc *codeService) Send(ctx context.Context, biz, phone string) error {
 		return err
 	}
 	err = svc.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
+	if err != nil {
+		err = fmt.Errorf("发送短信出现异常 %w", err)
+	}
 	return err
 }
 

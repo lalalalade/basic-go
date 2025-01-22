@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var _ UserDAO = (*GORMUserDAO)(nil)
+
 var (
 	ErrUserDuplicate = errors.New("用户冲突")
 	ErrUserNotFound  = gorm.ErrRecordNotFound

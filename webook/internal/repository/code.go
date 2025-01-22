@@ -5,6 +5,8 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/repository/cache"
 )
 
+var _ CodeRepository = (*CachedCodeRepository)(nil)
+
 var (
 	ErrCodeSendTooMany        = cache.ErrCodeSendToMany
 	ErrCodeVerifyTooManyTimes = cache.ErrCodeVerifyTooManyTimes

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 var (
@@ -19,6 +20,8 @@ var luaSetCode string
 
 //go:embed lua/verify_code.lua
 var luaVerifyCode string
+
+var _ CodeCache = (*RedisCodeCache)(nil)
 
 type CodeCache interface {
 	Set(ctx context.Context, biz, phone, code string) error
@@ -43,6 +46,7 @@ func (c *RedisCodeCache) Set(ctx context.Context, biz, phone, code string) error
 		// 毫无问题
 		return nil
 	case -1:
+		zap.L().Warn("短信发送太频繁", zap.String("biz", biz))
 		// 发送太频繁
 		return ErrCodeSendToMany
 	default:

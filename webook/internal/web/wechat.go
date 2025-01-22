@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var _ handler = (*OAuth2WechatHandler)(nil)
+
 type OAuth2WechatHandler struct {
 	svc     wechat.Service
 	userSvc service.UserService

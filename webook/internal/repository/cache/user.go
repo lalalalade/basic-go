@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+var _ UserCache = (*RedisUserCache)(nil)
 var ErrKeyNotExist = redis.Nil
 
 type UserCache interface {

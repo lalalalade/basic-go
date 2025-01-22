@@ -7,6 +7,8 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/service/sms"
 )
 
+var _ sms.Service = (*SMSService)(nil)
+
 type SMSService struct {
 	svc sms.Service
 	// 加盐字符串

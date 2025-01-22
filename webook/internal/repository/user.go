@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+var _ UserRepository = (*CachedUserRepository)(nil)
 var (
 	ErrUserDuplicate = dao.ErrUserDuplicate
 	ErrUserNotFound  = dao.ErrUserNotFound

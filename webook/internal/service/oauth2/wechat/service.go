@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
+	"github.com/lalalalade/basic-go/webook/pkg/logger"
 	"net/http"
 	"net/url"
 )
 
+var _ Service = (*service)(nil)
 var redirectURI = url.PathEscape("https://seaandblue.com/oauth2/wechat/callback")
 
 type Service interface {
@@ -19,12 +21,14 @@ type Service interface {
 type service struct {
 	appId     string
 	appSecret string
+	l         logger.LoggerV1
 }
 
-func NewService(appId, appSecret string) Service {
+func NewService(appId, appSecret string, l logger.LoggerV1) Service {
 	return &service{
 		appId:     appId,
 		appSecret: appSecret,
+		l:         l,
 	}
 }
 
@@ -44,6 +48,7 @@ func (s *service) VerifyCode(ctx context.Context, code string) (domain.WechatInf
 	if res.ErrCode != 0 {
 		return domain.WechatInfo{}, fmt.Errorf(res.ErrMsg)
 	}
+
 	return domain.WechatInfo{
 		OpenID:  res.OpenId,
 		UnionId: res.UnionId,

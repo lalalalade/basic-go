@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 )
 
+var _ sms.Service = (*FailoverSMSService)(nil)
+
 type FailoverSMSService struct {
 	svcs []sms.Service
 	idx  uint64

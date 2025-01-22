@@ -6,6 +6,8 @@ import (
 	"github.com/lalalalade/basic-go/webook/internal/service/sms"
 )
 
+var _ sms.Service = (*Service)(nil)
+
 type Service struct {
 	svc      sms.Service
 	retryMax int
@@ -18,7 +20,7 @@ func NewService(svc sms.Service, retryMax int) *Service {
 	}
 }
 
-func (s Service) Send(ctx context.Context, tpl string, args []string, numbers ...string) error {
+func (s *Service) Send(ctx context.Context, tpl string, args []string, numbers ...string) error {
 	err := s.svc.Send(ctx, tpl, args, numbers...)
 	cnt := 1
 	for err != nil && cnt < s.retryMax {

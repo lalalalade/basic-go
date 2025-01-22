@@ -5,8 +5,11 @@ import (
 	"errors"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
 	"github.com/lalalalade/basic-go/webook/internal/repository"
+	"github.com/lalalalade/basic-go/webook/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var _ UserService = (*userService)(nil)
 
 var ErrUserDuplicate = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("非法的用户名或密码")
@@ -22,10 +25,14 @@ type UserService interface {
 
 type userService struct {
 	repo repository.UserRepository
+	l    logger.LoggerV1
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo}
+func NewUserService(repo repository.UserRepository, l logger.LoggerV1) UserService {
+	return &userService{
+		repo: repo,
+		l:    l,
+	}
 }
 
 func (svc *userService) SignUp(ctx context.Context, u domain.User) error {
@@ -68,6 +75,7 @@ func (svc *userService) FindOrCreate(ctx context.Context, phone string) (domain.
 		// nil or 不为ErrUserNotFound
 		return u, err
 	}
+	svc.l.Info("用户未注册", logger.String("phone", phone))
 	err = svc.repo.Create(ctx, domain.User{
 		Phone: phone,
 	})
