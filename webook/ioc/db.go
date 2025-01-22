@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// InitDB 初始化MySQL服务
 func InitDB() *gorm.DB {
 	type Config struct {
 		DSN string `yaml:"dsn"`

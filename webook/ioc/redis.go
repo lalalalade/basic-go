@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// InitRedis 初始化Redis服务
 func InitRedis() redis.Cmdable {
 	type Config struct {
 		Addr string `yaml:"addr"`
