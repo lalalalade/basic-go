@@ -59,5 +59,6 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 		c.Set("claims", claims)
+		c.Next()
 	}
 }

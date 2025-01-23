@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+// MiddlewareBuilder
+// 1. 小心日志内容过多，url可能过长，请求、响应体都可能很大
+// 2. 用户可能换用不同的日志框架，所以要有足够的灵活性
+// 3. 考虑动态开关，结合监听配置文件，小心并发安全
 type MiddlewareBuilder struct {
 	allowReqBody  bool
 	allowRespBody bool
