@@ -1,9 +1,9 @@
-package repository
+package article
 
 import (
 	"context"
 	"github.com/lalalalade/basic-go/webook/internal/domain"
-	"github.com/lalalalade/basic-go/webook/internal/repository/dao"
+	dao "github.com/lalalalade/basic-go/webook/internal/repository/dao/article"
 )
 
 var _ ArticleRepository = (*CachedArticleRepository)(nil)
@@ -38,4 +38,13 @@ func (c *CachedArticleRepository) Update(ctx context.Context, art domain.Article
 		Content:  art.Content,
 		AuthorId: art.Author.Id,
 	})
+}
+
+func (c *CachedArticleRepository) toEntity(art domain.Article) dao.Article {
+	return dao.Article{
+		Id:       art.Id,
+		Title:    art.Title,
+		Content:  art.Content,
+		AuthorId: art.Author.Id,
+	}
 }
